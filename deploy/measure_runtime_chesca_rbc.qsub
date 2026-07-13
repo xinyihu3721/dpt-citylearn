@@ -1,0 +1,21 @@
+#!/bin/bash -l
+#$ -P <your_sge_project>
+#$ -N chesca_rt
+#$ -pe omp 4
+#$ -l h_rt=0:30:00
+#$ -j y
+#$ -o logs/measure_runtime_chesca_rbc.log
+
+# Adjust this to your conda/miniconda module + env; see README.md and CLAUDE.md for the
+# GLIBCXX/pandas-xgboost import fix this project needed on its original cluster.
+module load miniconda
+conda activate citylearn
+export LD_LIBRARY_PATH=<path-to-your-conda-env>/lib:$LD_LIBRARY_PATH
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+mkdir -p "$PROJECT_ROOT/logs"
+
+echo "===== Runtime-per-prediction measurement: CHESCA + RBC, host=$(hostname) ====="
+grep "model name" /proc/cpuinfo | head -1
+nproc
+python "$PROJECT_ROOT/deploy/measure_runtime_chesca_rbc.py"

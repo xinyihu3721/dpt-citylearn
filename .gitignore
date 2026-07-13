@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Large regenerable data/model artifacts (see README.md and data/README.md for how to
+# regenerate these by rerunning the pipeline).
+checkpoints/
+checkpoints_locked/
+checkpoints_hard_sweep/
+data/context/
+data/context_hard/
+data/labels/
+data/labels_hard/
+data/*.npz
+data/*.json
+!data/README.md
+
+# Job/run artifacts
+logs/
+*.log
+
+# Editor/OS cruft
+.ipynb_checkpoints/
+.DS_Store

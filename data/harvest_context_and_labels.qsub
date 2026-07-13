@@ -1,0 +1,21 @@
+#!/bin/bash -l
+#$ -P <your_sge_project>
+#$ -N chesca_g6h
+#$ -pe omp 4
+#$ -l h_rt=1:00:00
+#$ -j y
+#$ -t 1-10
+#$ -o logs/gate6_harvest.$TASK_ID.log
+
+# Adjust this to your conda/miniconda module + env; see README.md and CLAUDE.md for the
+# GLIBCXX/pandas-xgboost import fix this project needed on its original cluster.
+module load miniconda
+conda activate citylearn
+export LD_LIBRARY_PATH=<path-to-your-conda-env>/lib:$LD_LIBRARY_PATH
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+mkdir -p "$PROJECT_ROOT/logs"
+cd "$PROJECT_ROOT/oracle/chesca_repo"
+
+echo "===== Hard-task context/label harvest, SGE_TASK_ID=$SGE_TASK_ID ====="
+python "$PROJECT_ROOT/data/harvest_context_and_labels.py"
