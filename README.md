@@ -98,10 +98,12 @@ repo root as your working directory, e.g. `python train/train_dpt.py`.
   correctness risk (CHESCA rollouts are only bitwise-reproducible on the exact same compute-node
   hardware, per `CLAUDE.md`), so it was left duplicated-but-verified rather than refactored
   without re-verification. See `CLAUDE.md`'s "Known pitfalls" for detail.
-- The model shows a real gap vs CHESCA on comfort/discomfort and unserved-energy KPIs even where
-  its composite score is competitive — run `deploy/evaluate_and_report.py` and inspect the full
-  per-KPI breakdown it writes to `results/`, not just the headline average score.
-- Resilience KPIs (M, S) are measured from only a few outage seeds; error bars are wide.
+- The composite `average_score` KPI can mask per-KPI tradeoffs — inspect the full 8-KPI breakdown
+  that `deploy/evaluate_and_report.py` writes to `results/`, not just the headline average, before
+  drawing conclusions from any given run.
+- The two outage-conditional resilience KPIs (M, S) are only defined on episodes that actually
+  contain an outage; with few eval seeds some may see zero outage steps, so interpret M/S with
+  that sample-size caveat in mind.
 
 ## License
 
