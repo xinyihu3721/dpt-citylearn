@@ -40,8 +40,9 @@ reviewed and approved plan.
 - **No gradient updates at deployment** — all adaptation happens by accumulating context and
   conditioning on it.
 
-Full method, results (8-KPI breakdown vs CHESCA and a rule-based baseline), the in-context
-learning curve, and a runtime/latency comparison are in **[`writeup/report.md`](writeup/report.md)**.
+Measured results (8-KPI breakdown vs CHESCA and a rule-based baseline, the in-context learning
+curve, and a runtime/latency comparison) live as JSON in `results/` and as generated figures in
+`figures/`; see `analysis/` for the scripts that turn one into the other.
 
 ## Repo structure
 
@@ -58,7 +59,6 @@ results/     measured KPI + runtime JSON results (small, tracked in git)
 figures/     generated report figures (tracked in git)
 tests/       validation-gate sanity checks
 configs/     yaml training configs
-writeup/     method + results report
 ```
 
 `checkpoints_locked/`, `checkpoints_hard_sweep/`, and the `.npz`/normalizer files under `data/`
@@ -88,7 +88,7 @@ repo root as your working directory, e.g. `python train/train_dpt.py`.
 2. **Normalizer**: `python data/fit_normalizer.py` → `data/normalizer_hard.npz`.
 3. **Checkpoints**: `python train/train_mixratio_sweep.py` trains the full r1–r4 mix-ratio family
    into `checkpoints_hard_sweep/`; `deploy/evaluate_and_report.py` extends/evaluates them and
-   produces the results this repo's `writeup/report.md` reports.
+   produces the results under `results/`.
 4. **Figures**: `python analysis/make_incontext_figure.py`, `analysis/make_kpi_figure.py`,
    `analysis/make_runtime_figures.py` regenerate `figures/*` from `results/*.json`.
 
@@ -100,9 +100,10 @@ repo root as your working directory, e.g. `python train/train_dpt.py`.
   correctness risk (CHESCA rollouts are only bitwise-reproducible on the exact same compute-node
   hardware, per `CLAUDE.md`), so it was left duplicated-but-verified rather than refactored
   without re-verification. See `CLAUDE.md`'s "Known pitfalls" for detail.
-- The model shows a real, honestly-reported gap vs CHESCA on comfort/discomfort and unserved-energy
-  KPIs even where its composite score is competitive — see `writeup/report.md` for the full
-  per-KPI breakdown rather than just the headline average score.
+- The model shows a real gap vs CHESCA on comfort/discomfort and unserved-energy KPIs even where
+  its composite score is competitive — see `results/gate6b_group1_results.json` and
+  `figures/kpi_comparison.png` for the full per-KPI breakdown rather than just the headline
+  average score.
 - Resilience KPIs (M, S) are measured from only a few outage seeds; error bars are wide.
 
 ## License

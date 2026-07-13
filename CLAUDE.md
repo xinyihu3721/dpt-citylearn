@@ -62,47 +62,26 @@ conditioning on interaction history. Based on Lee et al. 2023 (DPT) and Berkes 2
   carbon G, discomfort U, ramping R, 1-load-factor L, daily peak P_d, all-time peak P_n,
   1-thermal-resilience M, normalized unserved energy S.
 
-## Compute environment: remote HPC cluster (SGE-scheduled)
+## Compute environment
 Developed on a remote SGE-scheduled HPC cluster via login/SSH, with a separate GPU-enabled compute
 partition for training. NOTE: "CHESCA" is NOT the cluster — it is our expert algorithm (see above).
+Python dependencies are pinned in `requirements.txt`; activate whatever conda/venv environment you
+use for this project before running anything here.
 
-**Python environment (KNOWN — always required):** before ANY Python or `pip`, activate:
-```bash
-module load miniconda && conda activate citylearn
-```
-Every shell command touching Python must be self-contained with this prefix (activation may not
-persist across separate commands), e.g.
-`module load miniconda && conda activate citylearn && python -c "import citylearn; print(citylearn.__version__)"`.
-Put the same two lines at the top of every batch job script. Verify `citylearn` is installed at Gate 0;
-if a package is missing, install it on the LOGIN node.
+**Library path note (found while checking CHESCA's deps):** on some systems, a conda env's own
+newer `libstdc++.so.6` (required by `pandas`/`xgboost`) is not on the default library search
+path, which can leave `pandas`/`xgboost` broken with `GLIBCXX_3.4.29 not found` /
+`CXXABI_1.3.15 not found` errors if the system's own older `libstdc++.so.6` is found first.
+Loading a newer `gcc` module does not reliably fix this (module search order can still win). Fix:
+prepend your conda env's own `lib/` dir to `LD_LIBRARY_PATH` for any command that touches
+pandas/xgboost (i.e. anything importing CHESCA).
 
-**IMPORTANT — library path fix (found while checking CHESCA's deps):** on some systems, the
-`citylearn` conda env's own newer `libstdc++.so.6` (required by `pandas`/`xgboost`) is not on the
-default library search path — plain `conda activate citylearn` can leave `pandas` and `xgboost`
-broken with `GLIBCXX_3.4.29 not found` / `CXXABI_1.3.15 not found` errors if the system's own
-older `libstdc++.so.6` is found first. Loading a newer `gcc` module does NOT fix it either (module
-search order still wins). Fix: prepend the env's own lib dir to `LD_LIBRARY_PATH`. The **full
-required incantation for every Python command that may touch pandas/xgboost** (i.e. anything
-importing CHESCA) is:
-```bash
-module load miniconda && conda activate citylearn && LD_LIBRARY_PATH=<path-to-your-conda-env>/lib:$LD_LIBRARY_PATH && <command>
-```
-Verified working combination: `numpy`, `pandas` (2.0.3), `scipy` (1.15.2), `xgboost` (3.2.0),
-`torch` (2.12.0), `citylearn` (2.1b12) — see `requirements.txt`.
-
-**Confirmed at Gate 0.5:**
-- Working activation incantation (exact, self-contained per command, no fallback sourcing needed):
-  `module load miniconda && conda activate citylearn && <command>`
-- `citylearn` package version initially installed: `2.3.1` (later pinned down to `2.1b12`, see
-  Gate 1 below).
-
-HPC rules that affect THIS project:
+General HPC lessons that shaped this project's structure (adapt to your own scheduler/cluster):
 - **Login node = setup only. Compute node = the work.** Submit batch jobs for training and sweeps.
 - **Compute nodes often have NO internet.** Do installs/downloads on the login node and pre-stage.
-  CityLearn datasets ship in the pip package (offline once installed); `torch`, `stable-baselines3`,
-  any LP solver must be installed first.
 - **Label generation (running CHESCA over the task distribution) is embarrassingly parallel** → use a
-  **job array** (one task per building-year/district). This is what makes label acquisition fast.
+  **job array** (one task per building-family/capacity combination). This is what makes label
+  acquisition fast — see `data/harvest_context_and_labels.qsub` for the pattern used here.
 - Transformer pretraining → GPU batch job, **resumable from checkpoint** (wall-time limits interrupt runs).
 - Everything driven by a config + submit script committed to the repo; reproducible by re-submitting.
 
@@ -119,7 +98,6 @@ results/     # measured KPI/runtime JSON results (small, tracked in git)
 figures/     # generated figures (tracked in git)
 tests/       # sanity checks + validation-gate checks
 configs/     # yaml configs; everything reproducible + seeded
-writeup/     # method + results report
 checkpoints_locked/  # the one documented deployable checkpoint (gitignored, not in the repo)
 ```
 
@@ -233,8 +211,8 @@ checkpoints_locked/  # the one documented deployable checkpoint (gitignored, not
   self-play-heavy, dominated on raw score). Flagged as likely because that task distribution was
   too easy (a single anchor's capacity variants, query state alone may already be near-sufficient)
   -- motivated building the genuinely harder multi-anchor + capacity-randomized distribution
-  (`envs/combined_task_sampler.py`) that the final r1-r4 sweep (see `writeup/report.md`) was run
-  against.
+  (`envs/combined_task_sampler.py`) that the final r1-r4 sweep (see `results/gate6b_group1_results.json`)
+  was run against.
 - **The in-context evaluation loop (`ContextBuffer` + greedy/sampled decoding) is duplicated
   near-identically across `deploy/evaluate_and_report.py`, `data/harvest_context_and_labels.py`,
   and `deploy/measure_runtime_dpt.py`, rather than factored into one shared module.** This is a
