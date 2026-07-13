@@ -23,3 +23,5 @@ logs/
 # Editor/OS cruft
 .ipynb_checkpoints/
 .DS_Store
+.idea/
+.vscode/
