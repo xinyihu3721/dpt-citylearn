@@ -54,15 +54,11 @@ data/        dataset classes + context/label harvesting + normalizer fitting (se
 train/       training loops (single-task reference trainer + the mix-ratio sweep that produced
              the deployed model)
 deploy/      in-context evaluation, held-out KPI scoring vs CHESCA/RBC, runtime benchmarks
-results/     (empty) where deploy/ scripts write measured KPI + runtime JSON results
-figures/     (empty) where local figure-generation scripts would write plots
+results/     where deploy/ scripts write measured KPI + runtime JSON results
+figures/     where figure-generation scripts write plots
 tests/       validation-gate sanity checks
 configs/     yaml training configs
 ```
-
-Everything under `checkpoints_locked/`, `checkpoints_hard_sweep/`, `data/`'s `.npz`/normalizer/
-context/label caches, and `results/`/`figures/`'s generated contents is gitignored — only source
-code, configs, and docs are tracked. Run the pipeline (see below) to regenerate all of it locally.
 
 ## Setup
 
@@ -80,30 +76,52 @@ path fix documented in `CLAUDE.md`'s "Compute environment" section.
 All scripts resolve paths relative to the repo root (`Path(__file__)`-based), so run them with the
 repo root as your working directory, e.g. `python train/train_dpt.py`.
 
-## Regenerating the gitignored artifacts
+## Usage: running the pipeline in order
 
-1. **Context + labels**: `python data/harvest_context_and_labels.py` (designed to run as an SGE
-   array job, one task per anchor-family × capacity combination — see
+1. **Setup** (see above): create/activate the conda env, `pip install -r requirements.txt`.
+
+2. **Sanity-check the oracle** (optional but recommended before trusting CHESCA as a labeler):
+   ```bash
+   cd oracle/chesca_repo && python ../../tests/test_gate2a_determinism.py
+   ```
+   Run this on a compute node, not a login node — see `CLAUDE.md` on why CHESCA rollouts aren't
+   bitwise-reproducible across different CPU hardware.
+
+3. **Harvest context + labels** for the anchor-family × capacity task distribution:
+   ```bash
+   python data/harvest_context_and_labels.py
+   ```
+   Designed to run as an SGE array job, one task per anchor-family/capacity combination (see
    `data/harvest_context_and_labels.qsub`). Populates `data/context_hard/` and `data/labels_hard/`.
-2. **Normalizer**: `python data/fit_normalizer.py` → `data/normalizer_hard.npz`.
-3. **Checkpoints**: `python train/train_mixratio_sweep.py` trains the full r1–r4 mix-ratio family
-   into `checkpoints_hard_sweep/`; `deploy/evaluate_and_report.py` extends/evaluates them and
-   produces the results under `results/`.
+   Note: the self-play context buckets require a trained checkpoint at
+   `checkpoints_locked/r3_operating_model.pt` — provide one, or adapt the script to skip the
+   self-play bucket if you don't have one yet.
 
-## Known limitations
+4. **Fit the observation normalizer** (after step 3 has produced data for all training tasks):
+   ```bash
+   python data/fit_normalizer.py   # → data/normalizer_hard.npz
+   ```
 
-- **The in-context evaluation loop is duplicated**, not shared, across
-  `deploy/evaluate_and_report.py`, `data/harvest_context_and_labels.py`, and
-  `deploy/measure_runtime_dpt.py`. Consolidating it into one module is real refactor work with
-  correctness risk (CHESCA rollouts are only bitwise-reproducible on the exact same compute-node
-  hardware, per `CLAUDE.md`), so it was left duplicated-but-verified rather than refactored
-  without re-verification. See `CLAUDE.md`'s "Known pitfalls" for detail.
-- The composite `average_score` KPI can mask per-KPI tradeoffs — inspect the full 8-KPI breakdown
-  that `deploy/evaluate_and_report.py` writes to `results/`, not just the headline average, before
-  drawing conclusions from any given run.
-- The two outage-conditional resilience KPIs (M, S) are only defined on episodes that actually
-  contain an outage; with few eval seeds some may see zero outage steps, so interpret M/S with
-  that sample-size caveat in mind.
+5. **Train the mix-ratio checkpoint family**:
+   ```bash
+   python train/train_mixratio_sweep.py   # → checkpoints_hard_sweep/r1..r4
+   ```
+
+6. **Evaluate and pick the operating checkpoint**:
+   ```bash
+   python deploy/evaluate_and_report.py   # extends/compares r2-r4, writes results/*.json
+   ```
+
+7. **(Optional) Runtime benchmarks**, once you have a trained checkpoint:
+   ```bash
+   python deploy/measure_runtime_dpt.py
+   python deploy/measure_runtime_chesca_rbc.py   # must run on a compute node
+   ```
+
+`train/train_dpt.py` (a simpler single-task reference trainer) and two of the `tests/` files
+depend on `data/context/`, `data/labels/`, `data/normalizer.npz` from an earlier, single-task
+version of this pipeline — that data has no regeneration script in this repo, so that path isn't
+runnable from a fresh clone alone.
 
 ## License
 
