@@ -8,9 +8,7 @@ __pycache__/
 checkpoints/
 checkpoints_locked/
 checkpoints_hard_sweep/
-data/context/
 data/context_hard/
-data/labels/
 data/labels_hard/
 data/*.npz
 data/*.json

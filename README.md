@@ -51,8 +51,7 @@ envs/        CityLearn schema/task sampling, conformed to a fixed (obs=52, actio
 oracle/      vendored CHESCA (the expert label oracle) — see oracle/chesca_repo/LICENSE
 model/       the DPT transformer + action discretizer
 data/        dataset classes + context/label harvesting + normalizer fitting (see data/README.md)
-train/       training loops (single-task reference trainer + the mix-ratio sweep that produced
-             the deployed model)
+train/       the mix-ratio sweep that trains the deployed model
 deploy/      in-context evaluation, held-out KPI scoring vs CHESCA/RBC, runtime benchmarks
 results/     where deploy/ scripts write measured KPI + runtime JSON results
 figures/     where figure-generation scripts write plots
@@ -74,7 +73,7 @@ targets citylearn's older pre-Gymnasium API — see `CLAUDE.md`'s Gate 1 notes f
 path fix documented in `CLAUDE.md`'s "Compute environment" section.
 
 All scripts resolve paths relative to the repo root (`Path(__file__)`-based), so run them with the
-repo root as your working directory, e.g. `python train/train_dpt.py`.
+repo root as your working directory, e.g. `python train/train_mixratio_sweep.py`.
 
 ## Usage: running the pipeline in order
 
@@ -117,11 +116,6 @@ repo root as your working directory, e.g. `python train/train_dpt.py`.
    python deploy/measure_runtime_dpt.py
    python deploy/measure_runtime_chesca_rbc.py   # must run on a compute node
    ```
-
-`train/train_dpt.py` (a simpler single-task reference trainer) and two of the `tests/` files
-depend on `data/context/`, `data/labels/`, `data/normalizer.npz` from an earlier, single-task
-version of this pipeline — that data has no regeneration script in this repo, so that path isn't
-runnable from a fresh clone alone.
 
 ## License
 
