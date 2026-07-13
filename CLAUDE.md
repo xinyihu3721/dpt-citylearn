@@ -93,8 +93,8 @@ model/       # DPT transformer, tokenizer/embeddings, action head
 data/        # dataset classes + rollout/label harvesting + normalizer fitting
 train/       # pretraining loops + configs
 deploy/      # in-context evaluation, held-out scoring vs CHESCA/RBC, runtime benchmarks
-results/     # measured KPI/runtime JSON results (small, tracked in git)
-figures/     # generated figures (tracked in git)
+results/     # (empty, gitignored) where deploy/ scripts write measured KPI/runtime JSON results
+figures/     # (empty, gitignored) where local figure-generation scripts would write plots
 tests/       # sanity checks + validation-gate checks
 configs/     # yaml configs; everything reproducible + seeded
 checkpoints_locked/  # the one documented deployable checkpoint (gitignored, not in the repo)

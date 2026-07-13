@@ -41,8 +41,8 @@ reviewed and approved plan.
   conditioning on it.
 
 Measured results (8-KPI breakdown vs CHESCA and a rule-based baseline, the in-context learning
-curve, and a runtime/latency comparison) live as JSON in `results/` and as generated figures in
-`figures/`.
+curve, and a runtime/latency comparison) are produced as JSON in `results/` by running the
+`deploy/` scripts below — this repo ships the pipeline, not the pre-computed numbers.
 
 ## Repo structure
 
@@ -54,14 +54,15 @@ data/        dataset classes + context/label harvesting + normalizer fitting (se
 train/       training loops (single-task reference trainer + the mix-ratio sweep that produced
              the deployed model)
 deploy/      in-context evaluation, held-out KPI scoring vs CHESCA/RBC, runtime benchmarks
-results/     measured KPI + runtime JSON results (small, tracked in git)
-figures/     generated report figures (tracked in git)
+results/     (empty) where deploy/ scripts write measured KPI + runtime JSON results
+figures/     (empty) where local figure-generation scripts would write plots
 tests/       validation-gate sanity checks
 configs/     yaml training configs
 ```
 
-`checkpoints_locked/`, `checkpoints_hard_sweep/`, and the `.npz`/normalizer files under `data/`
-are gitignored (see below) — they're large, binary, and fully regenerable from the scripts above.
+Everything under `checkpoints_locked/`, `checkpoints_hard_sweep/`, `data/`'s `.npz`/normalizer/
+context/label caches, and `results/`/`figures/`'s generated contents is gitignored — only source
+code, configs, and docs are tracked. Run the pipeline (see below) to regenerate all of it locally.
 
 ## Setup
 
@@ -98,9 +99,8 @@ repo root as your working directory, e.g. `python train/train_dpt.py`.
   hardware, per `CLAUDE.md`), so it was left duplicated-but-verified rather than refactored
   without re-verification. See `CLAUDE.md`'s "Known pitfalls" for detail.
 - The model shows a real gap vs CHESCA on comfort/discomfort and unserved-energy KPIs even where
-  its composite score is competitive — see `results/gate6b_group1_results.json` and
-  `figures/kpi_comparison.png` for the full per-KPI breakdown rather than just the headline
-  average score.
+  its composite score is competitive — run `deploy/evaluate_and_report.py` and inspect the full
+  per-KPI breakdown it writes to `results/`, not just the headline average score.
 - Resilience KPIs (M, S) are measured from only a few outage seeds; error bars are wide.
 
 ## License

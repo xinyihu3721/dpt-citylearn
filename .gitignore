@@ -16,6 +16,13 @@ data/*.npz
 data/*.json
 !data/README.md
 
+# Generated results/figures (regenerate locally; keep the directories via .gitkeep)
+results/*.json
+!results/.gitkeep
+figures/*.png
+figures/*.svg
+!figures/.gitkeep
+
 # Job/run artifacts
 logs/
 *.log
