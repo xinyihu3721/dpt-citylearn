@@ -20,6 +20,9 @@ data/*.json
 logs/
 *.log
 
+# Local-only figure-generation scripts (not published)
+analysis/
+
 # Editor/OS cruft
 .ipynb_checkpoints/
 .DS_Store

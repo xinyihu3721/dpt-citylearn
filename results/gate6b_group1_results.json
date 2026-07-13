@@ -510,5 +510,7 @@
     "one_minus_thermal_resilience_proportion": 0.27777777777777773,
     "power_outage_normalized_unserved_energy_total": 0.9233844583702217,
     "average_score": 0.6776531338691711
-  }
+  },
+  "_chosen_name": "r3",
+  "_chosen_h": 24
 }

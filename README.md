@@ -42,7 +42,7 @@ reviewed and approved plan.
 
 Measured results (8-KPI breakdown vs CHESCA and a rule-based baseline, the in-context learning
 curve, and a runtime/latency comparison) live as JSON in `results/` and as generated figures in
-`figures/`; see `analysis/` for the scripts that turn one into the other.
+`figures/`.
 
 ## Repo structure
 
@@ -54,7 +54,6 @@ data/        dataset classes + context/label harvesting + normalizer fitting (se
 train/       training loops (single-task reference trainer + the mix-ratio sweep that produced
              the deployed model)
 deploy/      in-context evaluation, held-out KPI scoring vs CHESCA/RBC, runtime benchmarks
-analysis/    figure-generation scripts (read from results/, write to figures/)
 results/     measured KPI + runtime JSON results (small, tracked in git)
 figures/     generated report figures (tracked in git)
 tests/       validation-gate sanity checks
@@ -89,8 +88,6 @@ repo root as your working directory, e.g. `python train/train_dpt.py`.
 3. **Checkpoints**: `python train/train_mixratio_sweep.py` trains the full r1–r4 mix-ratio family
    into `checkpoints_hard_sweep/`; `deploy/evaluate_and_report.py` extends/evaluates them and
    produces the results under `results/`.
-4. **Figures**: `python analysis/make_incontext_figure.py`, `analysis/make_kpi_figure.py`,
-   `analysis/make_runtime_figures.py` regenerate `figures/*` from `results/*.json`.
 
 ## Known limitations
 

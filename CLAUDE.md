@@ -93,7 +93,6 @@ model/       # DPT transformer, tokenizer/embeddings, action head
 data/        # dataset classes + rollout/label harvesting + normalizer fitting
 train/       # pretraining loops + configs
 deploy/      # in-context evaluation, held-out scoring vs CHESCA/RBC, runtime benchmarks
-analysis/    # figure generation from results/
 results/     # measured KPI/runtime JSON results (small, tracked in git)
 figures/     # generated figures (tracked in git)
 tests/       # sanity checks + validation-gate checks

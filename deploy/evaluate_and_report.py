@@ -40,7 +40,9 @@ from model.dpt import DPT
 from model.discretize import ActionDiscretizer
 from data.dpt_dataset import collate_dpt
 from data.dpt_dataset_hard import HardTaskDPTDataset
-from envs.combined_task_sampler import TRAIN_TASKS, HELD_OUT_TASK, FAMILY_C_HELDOUT, build_env
+from envs.combined_task_sampler import (
+    TRAIN_TASKS, HELD_OUT_TASK, FAMILY_C_HELDOUT, HELD_OUT_CAPACITY_MULTIPLIER, build_env,
+)
 
 CHESCA_REPO = os.path.join(PROJECT_ROOT, 'oracle', 'chesca_repo')
 NORMALIZER_PATH = os.path.join(PROJECT_ROOT, 'data', 'normalizer_hard.npz')
@@ -392,13 +394,19 @@ def phase3(chosen_name, chosen_checkpoint, device, discretizer, results):
     norm = np.load(NORMALIZER_PATH)
     mean, std = norm['mean'], norm['std']
     model = load_model_from_checkpoint(chosen_checkpoint, device)
-    capacity = 1.075  # original held-out capacity, most representative
+    capacity = HELD_OUT_CAPACITY_MULTIPLIER  # original held-out capacity, most representative
 
     # use the CHOSEN ratio's own best-known h (from the original hard-task frontier), not a
     # blind h=256 -- h=256 is often NOT the best operating point per every frontier table so far.
     BEST_KNOWN_H = {'r1': 72, 'r2': 24, 'r3': 24, 'r4': 72}
     model_h = BEST_KNOWN_H.get(chosen_name, 24)
     print(f"Using h={model_h} for '{chosen_name}' (its own best-known operating point, not h=256)")
+
+    # Persist which ratio/h Phase 3 actually used so downstream figure-generation scripts
+    # (analysis/*.py) can read it back instead of hardcoding 'r3'/h=24.
+    results['_chosen_name'] = chosen_name
+    results['_chosen_h'] = model_h
+    save_results(results)
 
     per_policy_kpis = {}
     for policy in ['model', 'chesca', 'rbc']:
